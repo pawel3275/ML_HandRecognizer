@@ -1,17 +1,24 @@
 import requests
 import shutil
+import glob
 from os import path, makedirs, listdir
 
-class datasetPrep:
+
+class DatasetPrep:
     def __init__(self):
+        self.current_directory = os.getcwd()
         pass
 
-    def download_dataset(self, url, dir):
+    @staticmethod
+    def download_dataset(url, dir):
         if not path.exists(dir):
             makedirs(dir, exist_ok=True)
 
+        # use tf.keras.utils.get_file(origin=dataset_url,
+        #                                    fname='flower_photos',
+        #                                    untar=True)
         response = requests.get(url, dir, stream=True)
-
+        print(type(response))
         if response is not 200:
             print("Error: Unable to load data from url: ", url)
 
@@ -23,7 +30,8 @@ class datasetPrep:
 
         print("Dataset downloaded with status success at directory: ", dir)
 
-    def split_dataset(self, dir, test_proportion=20, override_dir=False):
+    @staticmethod
+    def split_dataset(dir, test_proportion=20, override_dir=False):
         if not path.exists(dir):
             print("Path does not exist: ", dir)
             return
@@ -38,6 +46,15 @@ class datasetPrep:
 
         makedirs("test")
         makedirs("train")
-        for file in os.listdir(self.dlPth):
-            newfile = os.path.join(self.destPth, "name-of-new-file")
-            shutil.move(os.path.join(self.dlPth, file), newfile)
+        counter = 0
+        for filePath in glob.glob(dir + '\\*'):
+            if counter < test_files_count:
+                shutil.move(os.path.join(dir, filePath), os.path.join(dir, "/test"))
+                print("Moving file {}, to directory: ".format(os.path.join(dir, filePath), os.path.join(dir, "/test")))
+            else:
+                shutil.move(os.path.join(dir, filePath), os.path.join(dir, "/train"))
+                print("Moving file {}, to directory: ".format(os.path.join(dir, filePath), os.path.join(dir, "/train")))
+        counter += 1
+
+        print("All files moved successfully. Total files moved: ", counter)
+
