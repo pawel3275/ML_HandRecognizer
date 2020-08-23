@@ -133,6 +133,8 @@ class MlModel:
                   epochs=3)
 
         self.loss, self.accuracy = self.model.evaluate(self.array_with_test_images, self.array_with_test_labels)
+        self.accuracy = round(self.accuracy, 2) * 10
+        self.loss = round(self.loss, 2) * 10
 
         print("Loss:", self.loss)
         print("Accuracy:", self.accuracy)
@@ -143,9 +145,11 @@ class MlModel:
             makedirs(directory, exist_ok=True)
 
         self.model.save(directory + "\\" + filename + "_acc_" + str(self.accuracy))
+        self.model_path = directory + "\\" + filename + "_acc_" + str(self.accuracy)
 
-
-
-
+    def convert_model_to_light(self):
+        converter = tf.lite.TFLiteConverter.from_saved_model(self.model_path)
+        converted_model = converter.convert()
+        open("{}.tflite".format(self.model_path), "wb").write(converted_model)
 
 
