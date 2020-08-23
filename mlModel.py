@@ -31,12 +31,12 @@ class MlModel:
         self.train_files = [file for file in listdir(train_path) if isfile(join(train_path, file))]
         self.test_files = [file for file in listdir(test_path) if isfile(join(test_path, file))]
 
-        size = ((len(self.train_files)), 128, 128, 3)
+        size = ((len(self.train_files)), 64, 64, 3)
         self.array_with_train_images = np.zeros(size)
         size = ((len(self.train_files)), 1)
         self.array_with_train_labels = np.zeros(size)
 
-        size = ((len(self.test_files)), 128, 128, 3)
+        size = ((len(self.test_files)), 64, 64, 3)
         self.array_with_test_images = np.zeros(size)
         size = ((len(self.test_files)), 1)
         self.array_with_test_labels = np.zeros(size)
@@ -48,8 +48,16 @@ class MlModel:
         for file in self.train_files:
             # Load image to np array and process it to one dimensional array with pixel values
             image_as_array = cv2.imread(self.train_path + "\\" + file)
+
+            # percent by which the image is resized
+            scale_percent = 50
+
+            # calculate the 50 percent of original dimensions
+            width = int(image_as_array.shape[1] * scale_percent / 100)
+            height = int(image_as_array.shape[0] * scale_percent / 100)
+            image_as_array = cv2.resize(image_as_array, (width, height))
+
             image_as_array = image_as_array / 255.0
-            #image_as_array = image_as_array.reshape(1, 128*128*3)
 
             # Get label from filename0
             image_label = file[file.rfind("_")+1:file.rfind(".")]
@@ -70,8 +78,16 @@ class MlModel:
         for file in self.test_files:
             # Load image to np array and process it to one dimensional array with pixel values
             image_as_array = cv2.imread(self.test_path + "\\" + file)
+
+            # percent by which the image is resized
+            scale_percent = 50
+
+            # calculate the 50 percent of original dimensions
+            width = int(image_as_array.shape[1] * scale_percent / 100)
+            height = int(image_as_array.shape[0] * scale_percent / 100)
+            image_as_array = cv2.resize(image_as_array, (width, height))
+
             image_as_array = image_as_array / 255.0
-            #image_as_array = image_as_array.reshape(1, 128*128*3)
 
             # Get label from filename0
             image_label = file[file.rfind("_")+1:file.rfind(".")]
@@ -93,16 +109,15 @@ class MlModel:
 
     def train_model(self):
         self.model = models.Sequential()
-        self.model.add(layers.Conv2D(94, (3, 3), activation="relu", input_shape=(128, 128, 3)))
+        self.model.add(layers.Conv2D(94, (3, 3), activation="relu", input_shape=(64, 64, 3)))
         self.model.add(layers.MaxPooling2D((2, 2)))
-        self.model.add(layers.Conv2D(72, (3, 3), activation="relu"))
         self.model.add(layers.Conv2D(64, (3, 3), activation="relu"))
+        self.model.add(layers.MaxPooling2D((2, 2)))
 
         self.model.add(layers.Flatten())
-        self.model.add(layers.Dense(260, activation="relu"))
-        self.model.add(layers.Dense(142, activation="relu"))
-        self.model.add(layers.Dropout(0.3))
+        self.model.add(layers.Dense(125, activation="relu"))
         self.model.add(layers.Dense(56, activation="relu"))
+        self.model.add(layers.Dropout(0.2))
         self.model.add(layers.Dense(12, activation="relu"))
 
         print(self.model.summary())
@@ -115,7 +130,7 @@ class MlModel:
 
         self.model.fit(self.array_with_train_images,
                   self.array_with_train_labels,
-                  epochs=2)
+                  epochs=3)
 
         self.loss, self.accuracy = self.model.evaluate(self.array_with_test_images, self.array_with_test_labels)
 
