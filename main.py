@@ -12,6 +12,7 @@ validation_dataset_directory = dataset_directory + "\\test"
 current_time = datetime.now()
 current_time = current_time.strftime("%d_%m_%Y_%H_%M_%S")
 
+
 model = MlModel(train_dataset_directory, validation_dataset_directory)
 model.load_dataset()
 model.train_model()

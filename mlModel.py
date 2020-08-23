@@ -6,7 +6,7 @@ from os.path import isfile, join
 import os
 import cv2
 
-hands_iteral_labels = {
+hands_numerical_labels = {
     "0L": 0,
     "1L": 1,
     "2L": 2,
@@ -41,6 +41,12 @@ class MlModel:
         size = ((len(self.test_files)), 1)
         self.array_with_test_labels = np.zeros(size)
 
+        self.accuracy = 0
+        self.loss = 0
+
+        self.model = None
+        self.model_path = None
+
     def load_dataset(self):
         # I'm literally not proud of this function, this could be done better and be splitted,
         # but for now it will stay this way, it's just load data function after all
@@ -61,7 +67,7 @@ class MlModel:
 
             # Get label from filename0
             image_label = file[file.rfind("_")+1:file.rfind(".")]
-            image_label = hands_iteral_labels[image_label]
+            image_label = hands_numerical_labels[image_label]
 
             # Append data to lists
             self.array_with_train_images[counter][:] = image_as_array
@@ -91,7 +97,7 @@ class MlModel:
 
             # Get label from filename0
             image_label = file[file.rfind("_")+1:file.rfind(".")]
-            image_label = hands_iteral_labels[image_label]
+            image_label = hands_numerical_labels[image_label]
 
             # Append data to lists
             self.array_with_test_images[counter][:] = image_as_array
