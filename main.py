@@ -12,7 +12,7 @@ validation_dataset_directory = dataset_directory + "\\test"
 
 current_time = datetime.now()
 current_time = current_time.strftime("%d_%m_%Y_%H_%M_%S")
-model = MlModel(train_dataset_directory, validation_dataset_directory)
+#model = MlModel(train_dataset_directory, validation_dataset_directory)
 #model.create_aug_images()
 #model.train_model()
 #model.save_model("model_"+str(current_time))
@@ -20,6 +20,7 @@ model = MlModel(train_dataset_directory, validation_dataset_directory)
 
 
 new_model = tf.keras.models.load_model("D:\\scratch\\ML_HandRecognizer\\ML_HandRecognizer\\models\\test")
-new_model.summary()
+#new_model.summary()
 
 window = Gui(new_model)
+#Gui.test()

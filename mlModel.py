@@ -10,6 +10,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 
 class MlModel:
     classes_labels = ["0", "1", "2", "3", "4", "5"]
+    target_image_size = (32, 32)
 
     def __init__(self, train_path, test_path):
         tf.keras.backend.clear_session()
@@ -50,18 +51,26 @@ class MlModel:
         batch_size = 128
 
         train_image_datagen = ImageDataGenerator(rescale=1./255,
-                                                 rotation_range=45.,
+                                                 rotation_range=60.,
                                                  width_shift_range=0.2,
                                                  height_shift_range=0.2,
                                                  zoom_range=0.3,
                                                  horizontal_flip=True,
-                                                 vertical_flip=True)
+                                                 vertical_flip=False)
 
-        test_datagen = ImageDataGenerator(rescale=1. / 255)
+        #test_datagen = ImageDataGenerator(rescale=1. / 255)
+
+        test_datagen = ImageDataGenerator(rescale=1. / 255,
+                                          rotation_range=60.,
+                                          width_shift_range=0.2,
+                                          height_shift_range=0.2,
+                                          zoom_range=0.3,
+                                          horizontal_flip=True,
+                                          vertical_flip=False)
 
         self.train_gen = train_image_datagen.flow_from_directory(
             self.train_path,
-            target_size=(32, 32),
+            target_size=self.target_image_size,
             color_mode='grayscale',
             batch_size=batch_size,
             classes=MlModel.classes_labels,
@@ -70,12 +79,19 @@ class MlModel:
 
         self.test_gen = test_datagen.flow_from_directory(
             self.test_path,
-            target_size=(32, 32),
+            target_size=self.target_image_size,
             color_mode='grayscale',
             batch_size=batch_size,
             classes=MlModel.classes_labels,
             class_mode='categorical'
         )
+
+        X, y = self.train_gen.next()
+        print(X.shape, y.shape)
+        for i in range(50):
+            name = "Image_"+str(i)+str(np.argmax(y[i]))+".png"
+            img = np.uint8(255 * X[i, :, :, 0])
+            cv2.imwrite(name, img)
 
     def train_model(self):
         self.model = models.Sequential()
