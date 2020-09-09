@@ -14,9 +14,6 @@ class DatasetPrep:
         if not path.exists(dir):
             makedirs(dir, exist_ok=True)
 
-        # use tf.keras.utils.get_file(origin=dataset_url,
-        #                                    fname='flower_photos',
-        #                                    untar=True)
         response = requests.get(url, dir, stream=True)
         print(type(response))
         if response is not 200:

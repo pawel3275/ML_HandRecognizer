@@ -8,6 +8,7 @@ import cv2
 from tensorflow.keras.callbacks import EarlyStopping
 
 
+# dataset source: "https://www.kaggle.com/koryakinp/fingers/download"
 class MlModel:
     classes_labels = ["0", "1", "2", "3", "4", "5"]
     target_image_size = (32, 32)
@@ -29,7 +30,6 @@ class MlModel:
         image = cv2.GaussianBlur(image, (5, 5), 0)
 
         status, image = cv2.threshold(image, 80, 255, cv2.THRESH_BINARY)
-        cv2.imshow("Image", image)
         image = cv2.resize(image, (32, 32))
         image = image / 255.0
         image = image[:, :, np.newaxis]
@@ -58,8 +58,6 @@ class MlModel:
                                                  horizontal_flip=True,
                                                  vertical_flip=False)
 
-        #test_datagen = ImageDataGenerator(rescale=1. / 255)
-
         test_datagen = ImageDataGenerator(rescale=1. / 255,
                                           rotation_range=60.,
                                           width_shift_range=0.2,
@@ -85,13 +83,6 @@ class MlModel:
             classes=MlModel.classes_labels,
             class_mode='categorical'
         )
-
-        X, y = self.train_gen.next()
-        print(X.shape, y.shape)
-        for i in range(50):
-            name = "Image_"+str(i)+str(np.argmax(y[i]))+".png"
-            img = np.uint8(255 * X[i, :, :, 0])
-            cv2.imwrite(name, img)
 
     def train_model(self):
         self.model = models.Sequential()
@@ -143,5 +134,3 @@ class MlModel:
         converter = tf.lite.TFLiteConverter.from_saved_model(self.model_path)
         converted_model = converter.convert()
         open("{}.tflite".format(self.model_path), "wb").write(converted_model)
-
-

@@ -1,35 +1,33 @@
+import numpy as np
 import tkinter
 import cv2
 from PIL import Image, ImageTk
 from mlModel import MlModel
-import imutils
-import numpy as np
-import math
-from sklearn.metrics import pairwise
-import matplotlib.pyplot as plt
+
 
 class Gui:
     def __init__(self, ml_model, video_device_id=0):
         self.mlModel = ml_model
         self.frame_counter = 0
         self.background = None
-        self.wighted = None
-        self.area_of_interest = (100, 100), (300, 300)
+        self.image_to_predict = None
+        self.prediction = 0
 
         self.window = tkinter.Tk()
         self.window.title("ML Hand Recognizer")
         self.video_device_id = video_device_id
-        # self.window.minsize(480, 640)
 
         # open video source
         self.video_source = VideoCapture(self.video_device_id)
+        self.window.minsize(int(self.video_source.width/2), int(self.video_source.height/2))
+        self.window.maxsize(int(self.video_source.width), int(self.video_source.height))
 
         # Create a canvas that can fit the above video source size
         self.canvas = tkinter.Canvas(self.window, width=self.video_source.width, height=self.video_source.height)
         self.canvas.pack()
 
         # After it is called once, the update method will be automatically called every delay milliseconds
-        self.delay = 1  # 15 for release
+        self.delay = 15  # 15 for release
         self.update()
 
         self.window.mainloop()
@@ -38,7 +36,11 @@ class Gui:
         # Get a frame from the video source
         status, frame = self.video_source.get_frame()
         if status:
-            self.photo = ImageTk.PhotoImage(image=Image.fromarray(frame))
+            show_frame = frame
+            cv2.rectangle(show_frame, (50, 50), (450, 450), 255, 3)
+            show_frame = cv2.putText(show_frame, str(self.prediction), (0, 200), cv2.FONT_HERSHEY_SIMPLEX, 2,
+                                (0, 255, 0), 2, cv2.LINE_AA, False)
+            self.photo = ImageTk.PhotoImage(image=Image.fromarray(show_frame))
             self.canvas.create_image(0, 0, image=self.photo, anchor=tkinter.NW)
 
         frame = frame[50:450, 50:450]
@@ -57,55 +59,26 @@ class Gui:
             img = cv2.absdiff(back_gray, frame_gray)
 
             _, img = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-            con, hie = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-            con = max(con, key=cv2.contourArea)
-            conv_hull = cv2.convexHull(con)
-            cv2.drawContours(img, [conv_hull], -1, 225, 3)
 
             circular_roi = np.zeros_like(img, dtype='uint8')
-            wighted = cv2.addWeighted(img.copy(), 0.6, circular_roi, 0.4, 2)
-            cv2.imshow('wighted', wighted)
+            self.image_to_predict = cv2.addWeighted(img.copy(), 0.6, circular_roi, 0.4, 2)
+            cv2.imshow('image_to_predict', self.image_to_predict)
 
-        cv2.rectangle(frame, (50, 50), (400, 400), 255, 3)
-        cv2.imshow('frame', frame)
-
-        #image_to_predict, frame = Gui.preprocess_vdeo_frame(frame)
-        #cv2.imshow("frame", frame)
-        #cv2.imshow("image_to_predict", image_to_predict)
-        #self.predict_from_frame(image_to_predict)
+        self.predict_from_frame(self.image_to_predict)
         self.window.after(self.delay, self.update)
 
     def predict_from_frame(self, image):
+        if image is None:
+            return
+        image = cv2.GaussianBlur(image, (5, 5), 0)
         image = cv2.resize(image, (32, 32))
         image = image / 255.0
         image = image[np.newaxis, :, :, np.newaxis]
+
         prediction = self.mlModel.predict(image)
         index = np.argmax(prediction)
-        print(MlModel.classes_labels[index])
-
-    @staticmethod
-    def preprocess_vdeo_frame(frame):
-        frame = cv2.flip(frame, 1)
-
-        # Hand box
-        hand_region = frame[100:450, 100:450]
-        frame = cv2.rectangle(frame, (100, 100), (450, 450), (0, 255, 0), 0)
-
-        hsv = cv2.cvtColor(hand_region, cv2.COLOR_BGR2HSV)
-
-        # Skin tone color
-        lower_skin_color = np.array([0, 48, 80], dtype=np.uint8)
-        upper_skin_color = np.array([20, 255, 255], dtype=np.uint8)
-
-        # define masks
-        mask = cv2.inRange(hsv, lower_skin_color, upper_skin_color)
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
-        mask = cv2.erode(mask, kernel, iterations=2)
-        mask = cv2.dilate(mask, kernel, iterations=2)
-        mask = cv2.GaussianBlur(mask, (3, 3), 0)
-
-        return mask, frame
+        self.prediction = MlModel.classes_labels[index]
+        print(self.prediction)
 
 
 class VideoCapture:
