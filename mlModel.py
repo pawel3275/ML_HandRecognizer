@@ -8,7 +8,7 @@ import os
 import cv2
 
 
-# dataset source: "https://www.kaggle.com/koryakinp/fingers/download"
+
 class MlModel:
     labels = ["0", "1", "2", "3", "4", "5"]
     target_image_size = (32, 32)

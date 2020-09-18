@@ -5,6 +5,7 @@ import tensorflow as tf
 import pathlib
 import os
 
+# dataset source: "https://www.kaggle.com/koryakinp/fingers/download"
 
 dataset_directory = os.getcwd() + "\\dataset"
 train_dataset_directory = dataset_directory + "\\train"
